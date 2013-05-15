@@ -1,3 +1,4 @@
+import dirac
 from pyechonest import config
 from echonest.remix import audio,modify
 
@@ -7,6 +8,33 @@ config.ECHO_NEST_API_KEY="UJGOWAOWXLAR4SBR9"
 input_filename = "../audio/sample/fifth_test3.wav"
 output_filename = "../audio/processed/fifth_test3"
 # change tempo
+def change_tempo():
+    audiofile = audio.LocalAudioFile(input_filename)
+    bars = audiofile.analysis.bars
+    collect = []
+
+    for bar in bars:
+      if (len(bar.children()) > 3):
+        bar_ratio = (bars.index(bar) % 4) / 2.0
+
+        top = bar.children()[0]
+        chord = bar.children()[1]
+        root = bar.children()[2]
+        middle = bar.children()[3]
+        beats = [root, middle, top, chord]
+
+        for i, beat in enumerate(beats):
+          beat_index = i
+          ratio = beat_index / 2.0 + 0.5
+          ratio = ratio + bar_ratio 
+          beat_audio = beat.render()
+          scaled_beat = dirac.timeScale(beat_audio.data, ratio)
+          ts = audio.AudioData(ndarray=scaled_beat, shape=scaled_beat.shape, 
+                          sampleRate=audiofile.sampleRate, numChannels=scaled_beat.shape[1])
+          collect.append(ts)
+
+    out = audio.assemble(collect, numChannels=2)
+    out.encode(output_filename + 'TempoChange.mp3')
 
 # change pitch
 def shift_each_bar_semitones():
@@ -71,9 +99,6 @@ def extract_first_beat_and_shift():
   bars = audiofile.analysis.bars
   for i, bar in enumerate(bars):
       beat = bar.children()[0]
-      print i
-      print beat.local_context()
-      print beat
       new_beat = soundtouch.shiftPitchSemiTones(audiofile[beat], (i+1)*2)
       out_data.append(new_beat)
   out_data.encode(output_filename + "FirstBeatShifted.mp3")
@@ -94,18 +119,14 @@ def extract_first_beat():
 
 def reverse_beats():
   """Reverse a song by playing its beats forward starting from the end of the song"""
-
-  # Easy around wrapper mp3 decoding and Echo Nest analysis
   audio_file = audio.LocalAudioFile(input_filename)
-
-  # You can manipulate the beats in a song as a native python list
-  beats = audio_file.analysis.segments
+  beats = audio_file.analysis.beats
   beats.reverse()
-
-  # And render the list as a new audio file!
-  audio.getpieces(audio_file, beats).encode(output_filename + "Segreverse.mp3")
+  audio.getpieces(audio_file, beats).encode(output_filename + "BeatReverse.mp3")
 
 # reverse_beats()
 # extract_first_beat()
 # extract_first_beat_and_shift()
-shift_each_bar_arbitrary()
+# shift_each_bar_arbitrary()
+# shift_each_bar_semitones()
+change_tempo()
