@@ -4,11 +4,43 @@ from echonest.remix import audio,modify
 config.ECHO_NEST_API_KEY="UJGOWAOWXLAR4SBR9"
 
 
-input_filename = "../audio/sample/fifth.mp3"
-output_filename = "../audio/processed/fifth"
+input_filename = "../audio/sample/fifth_test3.wav"
+output_filename = "../audio/processed/fifth_test3"
 # change tempo
 
 # change pitch
+def shift_each_bar():
+  soundtouch = modify.Modify()
+  audiofile = audio.LocalAudioFile(input_filename)
+  print len(audiofile.data)
+  out_shape = (len(audiofile.data),)
+  out_data = audio.AudioData(shape=out_shape, numChannels=1, sampleRate=44100)
+  bars = audiofile.analysis.bars
+  for i, bar in enumerate(bars):
+    print bar.children()
+    for j, beat in enumerate(bar.children()):
+      print i
+      print beat
+      new_beat = soundtouch.shiftPitch(audiofile[beat], (i*2))
+      out_data.append(new_beat)
+  out_data.encode(output_filename + "EachBarShiftedSemiTones.mp3")
+
+def shift_each_bar():
+  soundtouch = modify.Modify()
+  audiofile = audio.LocalAudioFile(input_filename)
+  print len(audiofile.data)
+  out_shape = (len(audiofile.data),)
+  out_data = audio.AudioData(shape=out_shape, numChannels=1, sampleRate=44100)
+  bars = audiofile.analysis.bars
+  for i, bar in enumerate(bars):
+    print bar.children()
+    for j, beat in enumerate(bar.children()):
+      print i
+      print beat
+      new_beat = soundtouch.shiftPitch(audiofile[beat], ((i+1)*2)*0.1)
+      out_data.append(new_beat)
+  out_data.encode(output_filename + "EachBarShiftedArbitrary.mp3")
+
 def extract_first_beat_and_shift():
   soundtouch = modify.Modify()
   audiofile = audio.LocalAudioFile(input_filename)
@@ -20,7 +52,7 @@ def extract_first_beat_and_shift():
       print i
       print beat.local_context()
       print beat
-      new_beat = soundtouch.shiftPitchSemiTones(audiofile[beat], i*2)
+      new_beat = soundtouch.shiftPitchSemiTones(audiofile[beat], (i+1)*2)
       out_data.append(new_beat)
   out_data.encode(output_filename + "FirstBeatShifted.mp3")
 
@@ -53,4 +85,5 @@ def reverse_beats():
 
 # reverse_beats()
 # extract_first_beat()
-extract_first_beat_and_shift()
+# extract_first_beat_and_shift()
+shift_each_bar()
