@@ -65,13 +65,27 @@ class BaseRemix(object):
     self.output_file = os.path.join(self.output_folder, output_file_name)
 
   def process(self):
-      self.analyze()
+    """
+    Pre-processes the inputted audio file (self.analyze())
 
-      fn = getattr(self, self.remix_type)
-      assert hasattr(fn, '__call__'), 'Invalid Remix Type'
-      fn()
+    Then calls the corresponding function passed in through
+    the remix_type argument.
+    """
+    self.analyze()
+
+    fn = getattr(self, self.remix_type)
+    assert hasattr(fn, '__call__'), 'Invalid Remix Type'
+    fn()
 
   def change_tempo(self):
+    """
+    Changes the tempo of the beats in the chord
+
+    Gets the beats from the self.beats list then 
+    changes the tempo as specified by the remix_amount
+    that was either generated on initialization of this
+    class or passed in through the command line
+    """
     collect = []
     for x in range(8):
       for beat in self.beats:
@@ -87,6 +101,14 @@ class BaseRemix(object):
     self.encode(out)
 
   def change_note_order(self):
+    """
+    Changes the order of the notes played before a chord
+
+    Gets the notes that make up the chord (all of the beats
+    except for the last one) and randomly shuffles them.
+
+    Next, it adds the chord back in and renders the audio out
+    """
     collect = []
     beats = self.beats[:-1]
     random.shuffle(beats)
@@ -106,6 +128,16 @@ class BaseRemix(object):
     self.encode(out)
 
   def one_note_pitch_shift(self):
+    """
+    Picks one of the notes at random from the chord and 
+    modulates it based on the remix_amount parameter
+
+    Gets all of the notes of the chord from self.beats. 
+    Picks one of the notes at random.
+    Shifts that note by the remix amount.
+    Then combines all of the notes together to generate
+    a new chord from the notes.
+    """    
     random_index = self.get_random()
     for x in range(8):
       beats = self.beats[:-1]
@@ -123,6 +155,15 @@ class BaseRemix(object):
     self.encode(self.out_data)
 
   def all_notes_pitch_shift(self):
+    """
+    Picks modulates the notes of the chord by an amount
+    specified from the remix_amount parameter
+
+    Gets all of the notes of the chord from self.beats. 
+    Shifts the notes by the remix amount.
+    Then combines all of the notes together to generate
+    a new chord from the notes.
+    """    
     for x in range(8):
       beats = self.beats[:-1]
       beat_list = []
@@ -137,11 +178,32 @@ class BaseRemix(object):
     self.encode(self.out_data)
 
   def encode(self, out):
+    """
+    Param: out - output audio data
+
+    After all of the audio processing is done,
+    renders the newly created audio to the appropriate
+    output directories.
+
+    Sends one to the path specified in statics.py and the
+    passed in command_line parameters.
+
+    Sends another to the three_note or four_note audio/sample 
+    directory named 'previous.wav'. This enables us to chain
+    together our audio effects easily.
+    """    
     out.encode(self.output_file)
     prev_path = os.path.join(statics.input_path,self.Name,'previous.wav')
     out.encode(prev_path)
 
   def analyze(self):
+    """
+    Uses the echonest remix api to analyze the input_audio file.
+    Saves the information in class variables.
+
+    Finally calls get_beats() to handle the different types of 
+    chords supported.
+    """    
     self.soundtouch = modify.Modify()
     self.audiofile = audio.LocalAudioFile(self.input_file)
     self.bars = self.audiofile.analysis.bars
@@ -150,13 +212,47 @@ class BaseRemix(object):
     self.get_beats()
 
   def get_beats(self):
-      raise NotImplementedError
+    """
+    Implemented in subclasses
 
-  def mix_beat_list(self):
-      raise NotImplementedError
+    Iterates over the list of bars found through the analyze method
+    If the length of the bar matches the number of notes expected, 
+    4 for a 3 note scale (3 individual notes and then the chord) or
+    5 for a 4 note scale then we save the beats in the correct order 
+    in self.beats.
+
+    This method is a bit weird because the echonest remix api doesn't
+    always do the best job in sorting out the beats. To mitigate this
+    we made sure that our audio files followed a certain pattern and 
+    then coded to match our pattern.
+
+    All of our audio files play the notes in the scale first and then
+    the chord at the end. This is repeated 8 times so that the remix 
+    API can do a good job with it's analysis.
+    """    
+    raise NotImplementedError
+
+  def mix_beat_list(self, beat_list):
+    """
+    Implemented in subclasses
+
+    Args: beat_list - a list of beats found through the echonest remix API
+
+    Mixes the beats together using the audio.mix method of the remix API.
+    There is a megamix but we found that mixing the beats individually 
+    resulted in higher quality audio.
+    """   
+    raise NotImplementedError
 
   def get_random(self):
-      raise NotImplementedError
+    """
+    Implemented in subclasses
+
+    Gets a random integer in the range of available notes. 0-2 for the three_note
+    class and 0-3 for the four_note class. This is used to pick a random note to 
+    shift in the one_note_pitch_shift method.
+    """   
+    raise NotImplementedError
 
 
 class ThreeNoteRemix(BaseRemix):
@@ -165,6 +261,7 @@ class ThreeNoteRemix(BaseRemix):
     super(ThreeNoteRemix, self).__init__(args)
 
   def get_beats(self):
+    # for docs see method definition in BaseRemix
     for bar in self.bars:
       if (len(bar.children()) > 3):
         top = bar.children()[0]
@@ -175,11 +272,13 @@ class ThreeNoteRemix(BaseRemix):
         break
 
   def mix_beat_list(self, beat_list):
+    # for docs see method definition in BaseRemix
     new_beat = audio.mix(beat_list[0], beat_list[1], 0.5)
     new_beat = audio.mix(new_beat, beat_list[2], 0.66)
     return new_beat
 
   def get_random(self):
+    # for docs see method definition in BaseRemix
     return random.randrange(0,3)
 
 class FourNoteRemix(BaseRemix):
@@ -188,6 +287,7 @@ class FourNoteRemix(BaseRemix):
     super(FourNoteRemix, self).__init__(args)
 
   def get_beats(self):
+    # for docs see method definition in BaseRemix
     for bar in self.bars:
       if (len(bar.children()) > 4):
         top = bar.children()[4]
@@ -199,13 +299,17 @@ class FourNoteRemix(BaseRemix):
         break
 
   def mix_beat_list(self, beat_list):
+    # for docs see method definition in BaseRemix
     new_beat = audio.mix(beat_list[0], beat_list[1], 0.5)
     new_beat = audio.mix(new_beat, beat_list[2], 0.66)
     new_beat = audio.mix(new_beat, beat_list[3], 0.75)
     return new_beat
 
   def get_random(self):
+    # for docs see method definition in BaseRemix
     return random.randrange(0,4)
 
+# stores subclasses of BaseRemixes in the REMIXES
+# dictionary so that they can be read in main.py
 for remix in BaseRemix.__subclasses__():
     REMIXES[remix.Name] = remix
