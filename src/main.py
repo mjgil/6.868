@@ -1,5 +1,5 @@
 import argparse
-from remixes import REMIXES
+from remix import REMIXES
 
 def parse_args():
     print 'parsing arguments...'
