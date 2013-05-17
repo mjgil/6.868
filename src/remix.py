@@ -8,6 +8,13 @@ config.ECHO_NEST_API_KEY="UJGOWAOWXLAR4SBR9"
 REMIXES = {}
 
 def is_number(s):
+  """
+    Input: s - can really be anything
+
+    tries to cast it to a float
+    if it works return True
+    else return False
+  """
   try:
       float(s)
       return True
@@ -17,10 +24,30 @@ def is_number(s):
 
 class BaseRemix(object):
   def __init__(self, args):
-    self.input_file = os.path.join(
-      statics.input_path, args.chord_type, args.base_chord_type) + '.wav'
+    """
+    Input: args -- object created from parsed command line arguments
 
+    Initializes the basic remix class.
+
+    First, it forms the path for the input file from the 
+    parameters that were inputted to the program.
+    If the file cannot be found, it exits the program.
+
+    Next, parses the remix_amount parameter or sets it to a 
+    random float between zero and 1. If the inputted value 
+    is not a number or is not between 0 and 1, it exits the 
+    program.
+
+    Finally, it sets the remix_type to be a class variable 
+    and creates the output file path. It also creates the 
+    output folder if it does not already exist.
+    """
+
+    self.input_file = os.path.join(statics.input_path,
+                                   args.chord_type,
+                                   args.base_chord_type) + '.wav'
     assert os.path.exists(self.input_file), 'Chord Music File Does Not Exist'
+
     self.remix_amount = args.remix_amount or random.random()
     assert is_number(self.remix_amount), 'Remix Amount Must Be A Number'
     self.remix_amount = float(self.remix_amount)
