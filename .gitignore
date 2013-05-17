@@ -1,2 +1,5 @@
 music
 tutorials
+audio/processed
+
+*.pyc

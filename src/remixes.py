@@ -16,7 +16,7 @@ class BaseRemix(object):
     print self.input_file
     assert os.path.exists(self.input_file), 'Chord Music File Does Not Exist'
     self.remix_amount = args.remix_amount or random.random()
-
+    self.remix_type = args.remix_type
     self.output_folder = os.path.join(statics.output_path, args.chord_type, args.base_chord_type)
     print self.output_folder
     if not os.path.exists(self.output_folder):
@@ -30,7 +30,13 @@ class BaseRemix(object):
     print self.output_file
 
   def process(self):
-      raise NotImplementedError
+      self[self.remix_type]()
+
+class ThreeNoteRemix(BaseRemix):
+  Name = "three_note"
+  def __init__(self, args):
+    super(ThreeNoteRemix, self).__init__(args)
+
 
   def change_tempo(self):
       raise NotImplementedError
@@ -41,21 +47,20 @@ class BaseRemix(object):
   def all_note_pitch_shift(self):
       raise NotImplementedError
 
-class ThreeNoteRemix(BaseRemix):
-  Name = "three_note"
-  def __init__(self, args):
-    super(ThreeNoteRemix, self).__init__(args)
-
-  def process(self):
-    pass
-
 class FourNoteRemix(BaseRemix):
   Name = "four_note"
   def __init__(self, args):
     super(FourNoteRemix, self).__init__(args)
 
-  def process(self):
-    pass
+
+  def change_tempo(self):
+      raise NotImplementedError
+
+  def one_note_pitch_shift(self):
+      raise NotImplementedError
+
+  def all_note_pitch_shift(self):
+      raise NotImplementedError
 
 for remix in BaseRemix.__subclasses__():
     REMIXES[remix.Name] = remix
