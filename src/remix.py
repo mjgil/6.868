@@ -1,12 +1,15 @@
-import dirac
-from pyechonest import config
-from echonest.remix import audio,modify
+from remixes import REMIXES
 
-config.ECHO_NEST_API_KEY="UJGOWAOWXLAR4SBR9"
+class Remix:
+  def __init__(self, args):
+    self.remix = REMIXES.get(args.chord_type, None)
+    assert self.remix is not None, 'Chord Type Invalid'
 
+    self.remix = self.remix(args)
 
-input_filename = "../audio/sample/fifth_test3.wav"
-output_filename = "../audio/processed/fifth_test3"
+  def run():
+    self.remix.process()
+
 # change tempo
 def change_tempo():
     audiofile = audio.LocalAudioFile(input_filename)

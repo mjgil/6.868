@@ -1,5 +1,5 @@
 import argparse
-from remix import Remix
+from remixes import REMIXES
 
 def parse_args():
     print 'parsing arguments...'
@@ -7,19 +7,22 @@ def parse_args():
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('chord_type', 
         help='Specify either three_note or four_note')
-    parser.add_argument('base_chord_name', 
+    parser.add_argument('base_chord_type', 
         help='Name of base chord that you want to use (ex. major_fifth)')
-    parser.add_argument('manipulation_type', 
-        help='What to change in the chord (one_note_pitch, tempo, all_notes_pitch)')
-    parser.add_argument('manipulation_amount', 
-        help='Amount to change the manipulation type (Optional)',
+    parser.add_argument('remix_type', 
+        help='What to change in the chord (one_note_pitch, change_tempo, all_notes_pitch)')
+    parser.add_argument('remix_amount', 
+        help='Amount to change the remix type (Optional)',
         nargs='?')
     return parser.parse_args()
 
 def main(args):
     print "entering main..."
-    remix = Remix(args)
-    remix.run()
+    remix = REMIXES.get(args.chord_type, None)
+    assert remix is not None, 'Chord Type Invalid'
+
+    remix = remix(args)
+    remix.process()
 
 if __name__ == '__main__':
     args = parse_args()
