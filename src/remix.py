@@ -56,6 +56,10 @@ class BaseRemix(object):
   def all_notes_pitch_shift(self):
       raise NotImplementedError
 
+  def encode(self, out):
+    out.encode(self.output_file)
+    out.encode(os.path.join(statics.output_path,'last.mp3'))
+
 class ThreeNoteRemix(BaseRemix):
   Name = "three_note"
   def __init__(self, args):
@@ -82,14 +86,17 @@ class ThreeNoteRemix(BaseRemix):
           ts = audio.AudioData(ndarray=scaled_beat, shape=scaled_beat.shape, 
                           sampleRate=audiofile.sampleRate, numChannels=scaled_beat.shape[1])
           collect.append(ts)
+        break
 
     out = audio.assemble(collect, numChannels=2)
-    out.encode(self.output_file)
+    self.encode(out)
 
   def change_note_order(self):
     audiofile = audio.LocalAudioFile(self.input_file)
     bars = audiofile.analysis.bars
     collect = []
+
+    print len(bars)
 
     for bar in bars:
       if (len(bar.children()) > 3):
@@ -108,14 +115,15 @@ class ThreeNoteRemix(BaseRemix):
           ts = audio.AudioData(ndarray=scaled_beat, shape=scaled_beat.shape, 
                           sampleRate=audiofile.sampleRate, numChannels=scaled_beat.shape[1])
           collect.append(ts)
+        break
 
     out = audio.assemble(collect, numChannels=2)
-    out.encode(self.output_file)
+    self.encode(out)
 
   def one_note_pitch_shift(self):
     soundtouch = modify.Modify()
     audiofile = audio.LocalAudioFile(self.input_file)
-    out_shape = (len(audiofile.data),)
+    out_shape = (len(audiofile.data)/8,)
     out_data = audio.AudioData(shape=out_shape, numChannels=1, sampleRate=44100)
     bars = audiofile.analysis.bars
     random_index = random.randrange(0,3)
@@ -139,12 +147,13 @@ class ThreeNoteRemix(BaseRemix):
         new_beat = audio.mix(beat_list[0], beat_list[1], 0.5)
         new_beat = audio.mix(new_beat, beat_list[2], 0.66)
         out_data.append(new_beat)
-    out_data.encode(self.output_file)
+        break
+    self.encode(out_data)
 
   def all_notes_pitch_shift(self):
     soundtouch = modify.Modify()
     audiofile = audio.LocalAudioFile(self.input_file)
-    out_shape = (len(audiofile.data),)
+    out_shape = (len(audiofile.data)/8,)
     out_data = audio.AudioData(shape=out_shape, numChannels=1, sampleRate=44100)
     bars = audiofile.analysis.bars
     for i, bar in enumerate(bars):
@@ -166,7 +175,9 @@ class ThreeNoteRemix(BaseRemix):
         new_beat = audio.mix(beat_list[0], beat_list[1], 0.5)
         new_beat = audio.mix(new_beat, beat_list[2], 0.66)
         out_data.append(new_beat)
-    out_data.encode(self.output_file)
+
+        break
+    self.encode(out_data)
 
 class FourNoteRemix(BaseRemix):
   Name = "four_note"
