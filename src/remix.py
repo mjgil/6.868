@@ -20,7 +20,6 @@ class BaseRemix(object):
     self.input_file = os.path.join(
       statics.input_path, args.chord_type, args.base_chord_type) + '.wav'
 
-    print self.input_file
     assert os.path.exists(self.input_file), 'Chord Music File Does Not Exist'
     self.remix_amount = args.remix_amount or random.random()
     assert is_number(self.remix_amount), 'Remix Amount Must Be A Number'
@@ -29,15 +28,12 @@ class BaseRemix(object):
 
     self.remix_type = args.remix_type
     self.output_folder = os.path.join(statics.output_path, args.chord_type, args.base_chord_type)
-    print self.output_folder
     if not os.path.exists(self.output_folder):
       os.makedirs(self.output_folder)
 
     remix_str = '%.2f' % self.remix_amount
     output_file_name = "_".join([args.remix_type, remix_str]) + '.mp3'
     self.output_file = os.path.join(self.output_folder, output_file_name)
-
-    print self.output_file
 
   def process(self):
       self.analyze()
@@ -109,15 +105,6 @@ class BaseRemix(object):
       self.out_data.append(new_beat)
     self.encode(self.out_data)
 
-  def get_beats(self):
-      raise NotImplementedError
-
-  def mix_beat_list(self):
-      raise NotImplementedError
-
-  def get_random(self):
-      raise NotImplementedError
-
   def encode(self, out):
     out.encode(self.output_file)
     prev_path = os.path.join(statics.input_path,self.Name,'previous.wav')
@@ -130,6 +117,15 @@ class BaseRemix(object):
     self.out_shape = (len(self.audiofile.data),)
     self.out_data = audio.AudioData(shape=self.out_shape, numChannels=1, sampleRate=44100)
     self.get_beats()
+
+  def get_beats(self):
+      raise NotImplementedError
+
+  def mix_beat_list(self):
+      raise NotImplementedError
+
+  def get_random(self):
+      raise NotImplementedError
 
 
 class ThreeNoteRemix(BaseRemix):
