@@ -99,7 +99,7 @@ class BaseRemix(object):
     for x in range(8):
       beats = self.beats[:-1]
       beat_list = []
-      for j, beat in enumerate(beats):
+      for beat in beats:
         shift_ratio = self.remix_amount
         new_beat = self.soundtouch.shiftPitch(self.audiofile[beat], shift_ratio)
         self.out_data.append(new_beat)
