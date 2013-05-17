@@ -190,7 +190,33 @@ class FourNoteRemix(BaseRemix):
 
 
   def change_tempo(self):
-      raise NotImplementedError
+    audiofile = audio.LocalAudioFile(self.input_file)
+    bars = audiofile.analysis.bars
+    print bars
+    print audiofile.analysis
+    collect = []
+
+    for bar in bars:
+      if (len(bar.children()) > 4):
+        for x in range(8):
+          top = bar.children()[4]
+          chord = bar.children()[0]
+          root = bar.children()[1]
+          middle = bar.children()[2]
+          middle1 = bar.children()[3]
+          beats = [root, middle, middle1, top, chord]
+
+          for i, beat in enumerate(beats):
+            ratio = self.remix_amount + 0.5
+            beat_audio = beat.render()
+            scaled_beat = dirac.timeScale(beat_audio.data, ratio)
+            ts = audio.AudioData(ndarray=scaled_beat, shape=scaled_beat.shape, 
+                            sampleRate=audiofile.sampleRate, numChannels=scaled_beat.shape[1])
+            collect.append(ts)
+        break
+
+    out = audio.assemble(collect, numChannels=2)
+    self.encode(out)
 
   def change_note_order(self):
       raise NotImplementedError
