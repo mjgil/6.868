@@ -127,6 +127,6 @@ def reverse_beats():
 # reverse_beats()
 # extract_first_beat()
 # extract_first_beat_and_shift()
-# shift_each_bar_arbitrary()
+shift_each_bar_arbitrary()
 # shift_each_bar_semitones()
-change_tempo()
+# change_tempo()
