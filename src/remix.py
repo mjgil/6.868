@@ -58,7 +58,8 @@ class BaseRemix(object):
 
   def encode(self, out):
     out.encode(self.output_file)
-    out.encode(os.path.join(statics.output_path,'last.mp3'))
+    prev_path = os.path.join(statics.input_path,self.Name,'previous.wav')
+    out.encode(prev_path)
 
 class ThreeNoteRemix(BaseRemix):
   Name = "three_note"
@@ -72,20 +73,20 @@ class ThreeNoteRemix(BaseRemix):
 
     for bar in bars:
       if (len(bar.children()) > 3):
+        for x in range(8):
+          top = bar.children()[0]
+          chord = bar.children()[1]
+          root = bar.children()[2]
+          middle = bar.children()[3]
+          beats = [root, middle, top, chord]
 
-        top = bar.children()[0]
-        chord = bar.children()[1]
-        root = bar.children()[2]
-        middle = bar.children()[3]
-        beats = [root, middle, top, chord]
-
-        for i, beat in enumerate(beats):
-          ratio = self.remix_amount + 0.5
-          beat_audio = beat.render()
-          scaled_beat = dirac.timeScale(beat_audio.data, ratio)
-          ts = audio.AudioData(ndarray=scaled_beat, shape=scaled_beat.shape, 
-                          sampleRate=audiofile.sampleRate, numChannels=scaled_beat.shape[1])
-          collect.append(ts)
+          for i, beat in enumerate(beats):
+            ratio = self.remix_amount + 0.5
+            beat_audio = beat.render()
+            scaled_beat = dirac.timeScale(beat_audio.data, ratio)
+            ts = audio.AudioData(ndarray=scaled_beat, shape=scaled_beat.shape, 
+                            sampleRate=audiofile.sampleRate, numChannels=scaled_beat.shape[1])
+            collect.append(ts)
         break
 
     out = audio.assemble(collect, numChannels=2)
@@ -101,20 +102,21 @@ class ThreeNoteRemix(BaseRemix):
     for bar in bars:
       if (len(bar.children()) > 3):
 
-        top = bar.children()[0]
-        chord = bar.children()[1]
-        root = bar.children()[2]
-        middle = bar.children()[3]
-        beats = [root, middle, top]
-        random.shuffle(beats)
-        beats.append(chord)
+        for x in range(8):
+          top = bar.children()[0]
+          chord = bar.children()[1]
+          root = bar.children()[2]
+          middle = bar.children()[3]
+          beats = [root, middle, top]
+          random.shuffle(beats)
+          beats.append(chord)
 
-        for i, beat in enumerate(beats):
-          beat_audio = beat.render()
-          scaled_beat = dirac.timeScale(beat_audio.data, 1.0)
-          ts = audio.AudioData(ndarray=scaled_beat, shape=scaled_beat.shape, 
-                          sampleRate=audiofile.sampleRate, numChannels=scaled_beat.shape[1])
-          collect.append(ts)
+          for i, beat in enumerate(beats):
+            beat_audio = beat.render()
+            scaled_beat = dirac.timeScale(beat_audio.data, 1.0)
+            ts = audio.AudioData(ndarray=scaled_beat, shape=scaled_beat.shape, 
+                            sampleRate=audiofile.sampleRate, numChannels=scaled_beat.shape[1])
+            collect.append(ts)
         break
 
     out = audio.assemble(collect, numChannels=2)
@@ -129,24 +131,25 @@ class ThreeNoteRemix(BaseRemix):
     random_index = random.randrange(0,3)
     for i, bar in enumerate(bars):
       if (len(bar.children()) > 3):
-        top = bar.children()[0]
-        chord = bar.children()[1]
-        root = bar.children()[2]
-        middle = bar.children()[3]
+        for x in range(8):
+          top = bar.children()[0]
+          chord = bar.children()[1]
+          root = bar.children()[2]
+          middle = bar.children()[3]
 
-        beats = [root, middle, top]
-        beat_list = []
-        for j, beat in enumerate(beats):
-          shift_ratio = self.remix_amount
-          if j == random_index:
-            shift_ratio = shift_ratio * random.random()
-          new_beat = soundtouch.shiftPitch(audiofile[beat], shift_ratio)
+          beats = [root, middle, top]
+          beat_list = []
+          for j, beat in enumerate(beats):
+            shift_ratio = 1
+            if j == random_index:
+              shift_ratio = shift_ratio * self.remix_amount
+            new_beat = soundtouch.shiftPitch(audiofile[beat], shift_ratio)
+            out_data.append(new_beat)
+            beat_list.append(new_beat)
+
+          new_beat = audio.mix(beat_list[0], beat_list[1], 0.5)
+          new_beat = audio.mix(new_beat, beat_list[2], 0.66)
           out_data.append(new_beat)
-          beat_list.append(new_beat)
-
-        new_beat = audio.mix(beat_list[0], beat_list[1], 0.5)
-        new_beat = audio.mix(new_beat, beat_list[2], 0.66)
-        out_data.append(new_beat)
         break
     self.encode(out_data)
 
@@ -158,23 +161,24 @@ class ThreeNoteRemix(BaseRemix):
     bars = audiofile.analysis.bars
     for i, bar in enumerate(bars):
       if (len(bar.children()) > 3):
-        top = bar.children()[0]
-        chord = bar.children()[1]
-        root = bar.children()[2]
-        middle = bar.children()[3]
+        for x in range(8):
+          top = bar.children()[0]
+          chord = bar.children()[1]
+          root = bar.children()[2]
+          middle = bar.children()[3]
 
 
-        beats = [root, middle, top]
-        beat_list = []
-        for j, beat in enumerate(beats):
-          shift_ratio = self.remix_amount
-          new_beat = soundtouch.shiftPitch(audiofile[beat], shift_ratio)
+          beats = [root, middle, top]
+          beat_list = []
+          for j, beat in enumerate(beats):
+            shift_ratio = self.remix_amount
+            new_beat = soundtouch.shiftPitch(audiofile[beat], shift_ratio)
+            out_data.append(new_beat)
+            beat_list.append(new_beat)
+
+          new_beat = audio.mix(beat_list[0], beat_list[1], 0.5)
+          new_beat = audio.mix(new_beat, beat_list[2], 0.66)
           out_data.append(new_beat)
-          beat_list.append(new_beat)
-
-        new_beat = audio.mix(beat_list[0], beat_list[1], 0.5)
-        new_beat = audio.mix(new_beat, beat_list[2], 0.66)
-        out_data.append(new_beat)
 
         break
     self.encode(out_data)
