@@ -1,5 +1,7 @@
 music
 tutorials
 audio/processed
+audio/sample/three_note/previous.wav
+audio/sample/four_note/previous.wav
 
 *.pyc
