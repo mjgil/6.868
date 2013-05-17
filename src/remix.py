@@ -47,6 +47,9 @@ class BaseRemix(object):
   def change_tempo(self):
       raise NotImplementedError
 
+  def change_note_order(self):
+      raise NotImplementedError
+
   def one_note_pitch_shift(self):
       raise NotImplementedError
 
@@ -57,7 +60,6 @@ class ThreeNoteRemix(BaseRemix):
   Name = "three_note"
   def __init__(self, args):
     super(ThreeNoteRemix, self).__init__(args)
-
 
   def change_tempo(self):
     audiofile = audio.LocalAudioFile(self.input_file)
@@ -77,6 +79,32 @@ class ThreeNoteRemix(BaseRemix):
           ratio = self.remix_amount + 0.5
           beat_audio = beat.render()
           scaled_beat = dirac.timeScale(beat_audio.data, ratio)
+          ts = audio.AudioData(ndarray=scaled_beat, shape=scaled_beat.shape, 
+                          sampleRate=audiofile.sampleRate, numChannels=scaled_beat.shape[1])
+          collect.append(ts)
+
+    out = audio.assemble(collect, numChannels=2)
+    out.encode(self.output_file)
+
+  def change_note_order(self):
+    audiofile = audio.LocalAudioFile(self.input_file)
+    bars = audiofile.analysis.bars
+    collect = []
+
+    for bar in bars:
+      if (len(bar.children()) > 3):
+
+        top = bar.children()[0]
+        chord = bar.children()[1]
+        root = bar.children()[2]
+        middle = bar.children()[3]
+        beats = [root, middle, top]
+        random.shuffle(beats)
+        beats.append(chord)
+
+        for i, beat in enumerate(beats):
+          beat_audio = beat.render()
+          scaled_beat = dirac.timeScale(beat_audio.data, 1.0)
           ts = audio.AudioData(ndarray=scaled_beat, shape=scaled_beat.shape, 
                           sampleRate=audiofile.sampleRate, numChannels=scaled_beat.shape[1])
           collect.append(ts)
@@ -147,6 +175,9 @@ class FourNoteRemix(BaseRemix):
 
 
   def change_tempo(self):
+      raise NotImplementedError
+
+  def change_note_order(self):
       raise NotImplementedError
 
   def one_note_pitch_shift(self):
