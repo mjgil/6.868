@@ -62,24 +62,24 @@ class BaseRemix(object):
 
   def change_note_order(self):
     collect = []
+    beats = self.beats[:-1]
+    random.shuffle(beats)
+    chord = self.beats[-1]
+    beats.append(chord)
     for x in range(8):
-      beats = self.beats[:-1]
-      random.shuffle(beats)
-      chord = self.beats[-1]
-      beats.append(chord)
 
       for beat in beats:
         beat_audio = beat.render()
         scaled_beat = dirac.timeScale(beat_audio.data, 1.0)
         ts = audio.AudioData(ndarray=scaled_beat, shape=scaled_beat.shape, 
-                        sampleRate=audiofile.sampleRate, numChannels=scaled_beat.shape[1])
+                        sampleRate=self.audiofile.sampleRate, numChannels=scaled_beat.shape[1])
         collect.append(ts)
 
     out = audio.assemble(collect, numChannels=2)
     self.encode(out)
 
   def one_note_pitch_shift(self):
-    random_index = random.randrange(0,3)
+    random_index = self.get_random()
     for x in range(8):
       beats = self.beats[:-1]
       beat_list = []
@@ -88,10 +88,10 @@ class BaseRemix(object):
         if j == random_index:
           shift_ratio = shift_ratio * self.remix_amount
         new_beat = self.soundtouch.shiftPitch(self.audiofile[beat], shift_ratio)
-        out_data.append(new_beat)
+        self.out_data.append(new_beat)
         beat_list.append(new_beat)
 
-      new_beat = mix_beat_list(beat_list)
+      new_beat = self.mix_beat_list(beat_list)
       self.out_data.append(new_beat)
     self.encode(self.out_data)
 
@@ -102,11 +102,10 @@ class BaseRemix(object):
       for j, beat in enumerate(beats):
         shift_ratio = self.remix_amount
         new_beat = self.soundtouch.shiftPitch(self.audiofile[beat], shift_ratio)
-        out_data.append(new_beat)
+        self.out_data.append(new_beat)
         beat_list.append(new_beat)
 
-      new_beat = audio.mix(beat_list[0], beat_list[1], 0.5)
-      new_beat = audio.mix(new_beat, beat_list[2], 0.66)
+      new_beat = self.mix_beat_list(beat_list)
       self.out_data.append(new_beat)
     self.encode(self.out_data)
 
@@ -114,6 +113,9 @@ class BaseRemix(object):
       raise NotImplementedError
 
   def mix_beat_list(self):
+      raise NotImplementedError
+
+  def get_random(self):
       raise NotImplementedError
 
   def encode(self, out):
@@ -124,8 +126,8 @@ class BaseRemix(object):
   def analyze(self):
     self.soundtouch = modify.Modify()
     self.audiofile = audio.LocalAudioFile(self.input_file)
-    self.bars = audiofile.analysis.bars
-    self.out_shape = (len(audiofile.data),)
+    self.bars = self.audiofile.analysis.bars
+    self.out_shape = (len(self.audiofile.data),)
     self.out_data = audio.AudioData(shape=self.out_shape, numChannels=1, sampleRate=44100)
     self.get_beats()
 
@@ -143,11 +145,15 @@ class ThreeNoteRemix(BaseRemix):
         root = bar.children()[2]
         middle = bar.children()[3]
         self.beats = [root, middle, top, chord]
+        break
 
   def mix_beat_list(self, beat_list):
     new_beat = audio.mix(beat_list[0], beat_list[1], 0.5)
     new_beat = audio.mix(new_beat, beat_list[2], 0.66)
     return new_beat
+
+  def get_random(self):
+    return random.randrange(0,3)
 
 class FourNoteRemix(BaseRemix):
   Name = "four_note"
@@ -156,18 +162,23 @@ class FourNoteRemix(BaseRemix):
 
   def get_beats(self):
     for bar in self.bars:
-      top = bar.children()[4]
-      chord = bar.children()[0]
-      root = bar.children()[1]
-      middle = bar.children()[2]
-      middle1 = bar.children()[3]
-      self.beats = [root, middle, middle1, top, chord]
-      
+      if (len(bar.children()) > 4):
+        top = bar.children()[4]
+        chord = bar.children()[0]
+        root = bar.children()[1]
+        middle = bar.children()[2]
+        middle1 = bar.children()[3]
+        self.beats = [root, middle, middle1, top, chord]
+        break
+
   def mix_beat_list(self, beat_list):
     new_beat = audio.mix(beat_list[0], beat_list[1], 0.5)
     new_beat = audio.mix(new_beat, beat_list[2], 0.66)
     new_beat = audio.mix(new_beat, beat_list[3], 0.75)
     return new_beat
+
+  def get_random(self):
+    return random.randrange(0,4)
 
 for remix in BaseRemix.__subclasses__():
     REMIXES[remix.Name] = remix
