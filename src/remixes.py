@@ -30,7 +30,7 @@ class BaseRemix(object):
     print self.output_file
 
   def process(self):
-      self[self.remix_type]()
+      getattr(self, self.remix_type)()
 
 class ThreeNoteRemix(BaseRemix):
   Name = "three_note"
@@ -39,7 +39,7 @@ class ThreeNoteRemix(BaseRemix):
 
 
   def change_tempo(self):
-      raise NotImplementedError
+      print 'it worked'
 
   def one_note_pitch_shift(self):
       raise NotImplementedError
