@@ -10,7 +10,7 @@ def parse_args():
     parser.add_argument('base_chord_type', 
         help='Name of base chord that you want to use (ex. major_fifth)')
     parser.add_argument('remix_type', 
-        help='What to change in the chord (one_note_pitch, change_tempo, all_notes_pitch)')
+        help='What to change in the chord (one_note_pitch_shift, change_tempo, change_note_order, all_notes_pitch_shift)')
     parser.add_argument('remix_amount', 
         help='Amount to change the remix type (Optional)',
         nargs='?')

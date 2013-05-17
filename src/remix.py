@@ -27,7 +27,9 @@ class BaseRemix(object):
     assert (0.0 <= self.remix_amount <= 1.0), 'Remix Amount Must Be Between 0 and 1'
 
     self.remix_type = args.remix_type
-    self.output_folder = os.path.join(statics.output_path, args.chord_type, args.base_chord_type)
+    self.output_folder = os.path.join(statics.output_path, 
+                                      args.chord_type,
+                                      args.base_chord_type)
     if not os.path.exists(self.output_folder):
       os.makedirs(self.output_folder)
 
@@ -50,7 +52,8 @@ class BaseRemix(object):
         beat_audio = beat.render()
         scaled_beat = dirac.timeScale(beat_audio.data, ratio)
         ts = audio.AudioData(ndarray=scaled_beat, shape=scaled_beat.shape, 
-                        sampleRate=self.audiofile.sampleRate, numChannels=scaled_beat.shape[1])
+                             sampleRate=self.audiofile.sampleRate, 
+                             numChannels=scaled_beat.shape[1])
         collect.append(ts)
 
     out = audio.assemble(collect, numChannels=2)
@@ -68,7 +71,8 @@ class BaseRemix(object):
         beat_audio = beat.render()
         scaled_beat = dirac.timeScale(beat_audio.data, 1.0)
         ts = audio.AudioData(ndarray=scaled_beat, shape=scaled_beat.shape, 
-                        sampleRate=self.audiofile.sampleRate, numChannels=scaled_beat.shape[1])
+                             sampleRate=self.audiofile.sampleRate,
+                             numChannels=scaled_beat.shape[1])
         collect.append(ts)
 
     out = audio.assemble(collect, numChannels=2)
