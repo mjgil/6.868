@@ -246,10 +246,68 @@ class FourNoteRemix(BaseRemix):
     self.encode(out)
 
   def one_note_pitch_shift(self):
-      raise NotImplementedError
+    soundtouch = modify.Modify()
+    audiofile = audio.LocalAudioFile(self.input_file)
+    out_shape = (len(audiofile.data),)
+    out_data = audio.AudioData(shape=out_shape, numChannels=1, sampleRate=44100)
+    bars = audiofile.analysis.bars
+    random_index = random.randrange(0,4)
+    for i, bar in enumerate(bars):
+      if (len(bar.children()) > 4):
+        for x in range(8):
+          top = bar.children()[4]
+          chord = bar.children()[0]
+          root = bar.children()[1]
+          middle = bar.children()[2]
+          middle1 = bar.children()[3]
+          beats = [root, middle, middle1, top]
+
+          beat_list = []
+          for j, beat in enumerate(beats):
+            shift_ratio = 1
+            if j == random_index:
+              shift_ratio = shift_ratio * self.remix_amount
+            new_beat = soundtouch.shiftPitch(audiofile[beat], shift_ratio)
+            out_data.append(new_beat)
+            beat_list.append(new_beat)
+
+          new_beat = audio.mix(beat_list[0], beat_list[1], 0.5)
+          new_beat = audio.mix(new_beat, beat_list[2], 0.66)
+          new_beat = audio.mix(new_beat, beat_list[3], 0.75)
+          out_data.append(new_beat)
+        break
+    self.encode(out_data)
 
   def all_notes_pitch_shift(self):
-      raise NotImplementedError
+    soundtouch = modify.Modify()
+    audiofile = audio.LocalAudioFile(self.input_file)
+    out_shape = (len(audiofile.data),)
+    out_data = audio.AudioData(shape=out_shape, numChannels=1, sampleRate=44100)
+    bars = audiofile.analysis.bars
+    for i, bar in enumerate(bars):
+      if (len(bar.children()) > 4):
+        for x in range(8):
+          top = bar.children()[4]
+          chord = bar.children()[0]
+          root = bar.children()[1]
+          middle = bar.children()[2]
+          middle1 = bar.children()[3]
+          beats = [root, middle, middle1, top]
+
+          beat_list = []
+          for j, beat in enumerate(beats):
+            shift_ratio = self.remix_amount
+            new_beat = soundtouch.shiftPitch(audiofile[beat], shift_ratio)
+            out_data.append(new_beat)
+            beat_list.append(new_beat)
+
+          new_beat = audio.mix(beat_list[0], beat_list[1], 0.5)
+          new_beat = audio.mix(new_beat, beat_list[2], 0.66)
+          new_beat = audio.mix(new_beat, beat_list[3], 0.75)
+          out_data.append(new_beat)
+
+        break
+    self.encode(out_data)
 
 for remix in BaseRemix.__subclasses__():
     REMIXES[remix.Name] = remix
